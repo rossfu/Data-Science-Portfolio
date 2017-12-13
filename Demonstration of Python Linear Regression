@@ -1,0 +1,53 @@
+import pandas as pd
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.style.use('ggplot') # Look Pretty
+
+#method will take care of plotting your test observations, comparing them to the regression line, and displaying the R2 coefficient
+def drawLine(model, X_test, y_test, title):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(X_test, y_test, c='g', marker='o')
+    ax.plot(X_test, model.predict(X_test), color='orange', linewidth=1, alpha=0.7)
+
+    print("Est 2014 " + title + " Life Expectancy: ", model.predict([[2014]])[0])
+    print("Est 2030 " + title + " Life Expectancy: ", model.predict([[2030]])[0])
+    print("Est 2045 " + title + " Life Expectancy: ", model.predict([[2045]])[0])
+
+    score = model.score(X_test, y_test)
+    title += " R2: " + str(score)
+    ax.set_title(title)
+
+    plt.show()
+    
+    
+#Load Data    
+X = pd.read_csv('life_expectancy.csv', sep='\t')
+
+#Make Model
+from sklearn.linear_model import LinearRegression
+model = LinearRegression()
+
+X_train = X.Year[X.Year < 1986]
+X_test = X.Year[X.Year >= 1986]
+y_train = X.WhiteMale[X.Year < 1986]
+y_test = X.WhiteMale[X.Year >= 1986]
+
+X_train = X_train.values.reshape(-1, 1)
+X_test = X_test.values.reshape(-1, 1)
+y_train = y_train.values.reshape(-1, 1)
+y_test = y_test.values.reshape(-1, 1)
+
+
+#Train your model then pass it into drawLine with your training set and labels. You can title it 'WhiteMale'. 
+#drawLine will output to the console a 2014 extrapolation / approximation for what it believes the WhiteMale's life expectancy 
+#in the U.S. will be... given the pre-1986 data you trained it with. It'll also produce a 2030 and 2045 extrapolation:
+
+from sklearn.linear_model import LinearRegression
+model = LinearRegression()
+model.fit(X_train, y_train)
+drawLine(model, X_test, y_test, title='WhiteMale')
+
+#Print the actual 2014 'WhiteMale' life expectancy from your loaded dataset
+print(X.WhiteMale[X.Year == 2014])
