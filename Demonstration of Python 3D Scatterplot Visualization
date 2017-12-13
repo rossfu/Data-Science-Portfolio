@@ -1,0 +1,35 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+
+# Look pretty...
+# matplotlib.style.use('ggplot')
+plt.style.use('ggplot')
+
+#Load up wheat data
+df = pd.read_csv('wheat.data')
+
+
+#Create a new 3D subplot using figure fig, which we've defined for you below. Use that subplot to draw a 3D scatter plot 
+#using the area, perimeter, and asymmetry features. Be sure so use the optional display parameter c='red', and also label your axes:
+
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlabel('area')
+ax.set_ylabel('perimeter')
+ax.set_zlabel('asymmetry')
+ax.scatter(df['area'], df['perimeter'], df['asymmetry'], c='red', marker='.')
+
+#Create another 3D subplot using fig. Then use the subplot to graph a 3D scatter plot of the width, groove, and length features. 
+#Be sure so use the optional display parameter c='green', and be sure to label your axes:
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlabel('width')
+ax.set_ylabel('groove')
+ax.set_zlabel('length')
+ax.scatter(df['width'], df['groove'], df['length'], c='green', marker='.')
+
+# Finally, display the graphs:
+plt.show()
