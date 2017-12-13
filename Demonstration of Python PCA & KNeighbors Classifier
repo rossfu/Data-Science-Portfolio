@@ -1,0 +1,97 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.style.use('ggplot') # Look Pretty
+
+def plotDecisionBoundary(model, X, y):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    padding = 0.6
+    resolution = 0.0025
+    colors = ['royalblue','forestgreen','ghostwhite']
+
+    # Calculate the boundaris
+    x_min, x_max = X[:, 0].min(), X[:, 0].max()
+    y_min, y_max = X[:, 1].min(), X[:, 1].max()
+    x_range = x_max - x_min
+    y_range = y_max - y_min
+    x_min -= x_range * padding
+    y_min -= y_range * padding
+    x_max += x_range * padding
+    y_max += y_range * padding
+
+    # Create a 2D Grid Matrix. The values stored in the matrix
+    # are the predictions of the class at at said location
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, resolution),
+                       np.arange(y_min, y_max, resolution))
+
+    # What class does the classifier say?
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+
+    # Plot the contour map
+    cs = plt.contourf(xx, yy, Z, cmap=plt.cm.terrain)
+
+    # Plot the test original points as well...
+    for label in range(len(np.unique(y))):
+        indices = np.where(y == label)
+        plt.scatter(X[indices, 0], X[indices, 1], c=colors[label], label=str(label), alpha=0.8)
+
+    p = model.get_params()
+    plt.axis('tight')
+    plt.title('K = ' + str(p['n_neighbors']))
+
+#Load up the dataset into a variable called X
+x = pd.read_csv('wheat.data')
+ 
+#Copy the wheat_type series slice out of X, and into a series called y. Then drop the original wheat_type column from the X:
+y = x['wheat_type']
+x.drop(labels = ['wheat_type'], inplace = True, axis = 1)
+
+#Do a quick, "ordinal" conversion of y
+type_ordered = [
+    'kama', 'canadian', 'rosa'
+]
+
+y = y.astype('category',
+    ordered=True,
+    categories=type_ordered             
+).cat.codes
+
+#Do some basic nan munging. Fill each row's nans with the mean of the feature:
+x = x.fillna(x.mean())
+
+#Split X into training and testing data sets using train_test_split(). Use 0.33 test size, and use random_state=1. 
+#This is important so that your answers are verifiable. In the real world, you wouldn't specify a random_state:
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state=1)
+
+#Create an instance of SKLearn's Normalizer class and then train it using its .fit() method against your training data.
+from sklearn.preprocessing import Normalizer
+norm = Normalizer()
+norm.fit(X_train)
+
+X_train_norm = norm.transform(X_train)
+X_test_norm = norm.transform(X_test)
+
+#create a PCA transformation, Fit it against your training data, and then project your training and testing 
+#features into PCA space using the PCA model's .transform() method
+
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2, svd_solver='randomized')
+pca.fit(X_train_norm)
+pca_train = pca.transform(X_train_norm)
+pca_test = pca.transform(X_test_norm)
+
+#Create and train a KNeighborsClassifier
+
+from sklearn.neighbors import KNeighborsClassifier
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(pca_train, y_train)
+
+plotDecisionBoundary(knn, pca_train, y_train)
+accuracy_score = knn.score(pca_test, y_test)
+print(accuracy_score)
