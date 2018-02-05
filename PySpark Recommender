@@ -1,0 +1,27 @@
+from pyspark.ml.recommendation import ALS
+
+#Load source data
+
+ratings = spark.read.csv('wasb:///data/ratings.csv', inferschema = True, header = True)
+movies = spark.read.csv('wasb:///data/movies.csv', inferschema = True, header = True)
+ratings.join(movies, "movieID").show()
+
+#Prepare the data
+
+data = ratings.select("userID", "movieID", "rating")
+splits = data.randomSplit([0.7, 0.3])
+train = splits[0].withColumnRenamed("rating", "label")
+test = splits[1].withColumnRenamed("rating", "Truelabel")
+train_rows = train.count()
+test_rows = test.count()
+print "Training rows:", train_rows, "Testing_rows:", test_rows
+
+#Build Recommender
+
+als = ALS(maxIter=5, regparam=0.01, userCol="userID", itemCol="movieID", ratingCol="label")
+model = als.fit(train)
+
+#Test Recommender
+
+prediction = model.transform(test)
+prediction.join(movies, "movieID").select("userID", "title", "prediction", "Truelabel").show(100)
