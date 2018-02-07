@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-matplotlib.style.use('ggplot') # Look Pretty
+matplotlib.style.use('ggplot')
 
 #method will take care of plotting your test observations, comparing them to the regression line, and displaying the R2 coefficient
 def drawLine(model, X_test, y_test, title):
